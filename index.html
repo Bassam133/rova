@@ -153,7 +153,127 @@
     .leaf.br{ bottom:0; right:0; }
     @page{ size:A4; margin:0; }
   }
+  /* ================= Apple HIG · Liquid Glass layer =================
+     Palette unchanged (aubergine / gold / cream). Per HIG "Materials":
+     Liquid Glass is a FUNCTIONAL layer that floats ABOVE the content —
+     so only the controls (buttons, icon buttons, icon tiles) become
+     glass; the invoice sheet stays a standard material so it prints
+     cleanly. HIG "Color": color is applied to the BACKGROUND of the one
+     prominent action, never to its label. */
+  :root{
+    --glass-blur:blur(22px) saturate(180%);
+    --glass-bg:rgba(255,255,255,.58);
+    --glass-line:rgba(255,255,255,.72);
+    --glass-shadow:0 10px 30px rgba(61,42,80,.15);
+  }
+  body{
+    font-family:"SF Arabic","IBM Plex Sans Arabic",-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;
+    background:
+      radial-gradient(circle at 10% -4%,rgba(201,162,74,.32),transparent 46%),
+      radial-gradient(circle at 92% 4%,rgba(61,42,80,.22),transparent 52%),
+      radial-gradient(circle at 50% 108%,rgba(201,162,74,.16),transparent 46%),
+      #ece5d8;
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* one glass recipe, reused everywhere */
+  .btn,.items .row button,.detail-cell .ic{
+    -webkit-backdrop-filter:var(--glass-blur);
+    backdrop-filter:var(--glass-blur);
+  }
+
+  /* ---- buttons: Liquid Glass, capsule shape (HIG: min 44pt target) ---- */
+  .btn{
+    border:1px solid var(--glass-line);
+    border-radius:999px;
+    min-height:44px; padding:0 22px;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--glass-bg);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.92), var(--glass-shadow);
+    color:var(--aubergine);
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .btn:hover{ transform:translateY(-1px); box-shadow:inset 0 1px 0 rgba(255,255,255,.96), 0 15px 36px rgba(61,42,80,.20); }
+  .btn:active{ transform:translateY(0); }
+  /* colored glass — reserved for the ONE prominent action (view / print) */
+  .btn-gold{
+    background:linear-gradient(150deg,rgba(233,205,130,.94),rgba(201,162,74,.88));
+    border-color:rgba(255,255,255,.78);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.96), 0 12px 28px rgba(201,162,74,.40);
+    color:#3a2b16;
+  }
+  .btn-outline{ background:var(--glass-bg); color:var(--aubergine); }
+
+  /* ---- icon-only control (remove row): glass circle ---- */
+  .items .row button{
+    width:44px; height:44px; flex:0 0 44px; border-radius:50%;
+    background:var(--glass-bg); color:var(--aubergine);
+    border:1px solid var(--glass-line);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.92), 0 6px 16px rgba(61,42,80,.15);
+    font-size:18px; line-height:1;
+  }
+  .items .row button:hover{ background:rgba(255,255,255,.78); }
+
+  /* ---- icon tiles in the event-details row: glass squares ---- */
+  .detail-cell{ display:flex; flex-direction:column; align-items:center; padding:2.4mm 1.5mm; }
+  .detail-cell .ic{
+    display:flex; align-items:center; justify-content:center;
+    width:9mm; height:9mm; margin:0 auto 1.2mm;
+    font-size:12pt; line-height:1;
+    border-radius:2.8mm;
+    background:linear-gradient(150deg,rgba(201,162,74,.30),rgba(255,255,255,.68));
+    border:1px solid rgba(201,162,74,.45);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.92), 0 2px 8px rgba(61,42,80,.13);
+  }
+
+  /* ---- inputs: quiet standard material (content layer) ---- */
+  input,select,textarea{
+    border-radius:12px; min-height:44px; padding:10px 14px;
+    background:rgba(255,255,255,.74);
+    border:1px solid rgba(61,42,80,.14);
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none; border-color:var(--gold);
+    box-shadow:0 0 0 4px rgba(201,162,74,.28);
+  }
+
+  /* ---- form pane: standard material, NOT glass (content layer) ---- */
+  .form-pane{
+    background:rgba(255,255,255,.86);
+    border:1px solid rgba(255,255,255,.85);
+    border-radius:26px; padding:26px 28px;
+    box-shadow:0 22px 60px rgba(61,42,80,.16);
+  }
+  .radio-row label{ min-height:38px; align-items:center; }
+  .sheet{ box-shadow:0 22px 60px rgba(61,42,80,.18); }
+
+  /* ---- item rows (built into #itemsBox): glass icon button + intended flex ---- */
+  #itemsBox .row{ display:flex; gap:10px; margin-bottom:10px; align-items:center; }
+  #itemsBox .row input.in-name{ flex:2 1 0; }
+  #itemsBox .row input.in-detail{ flex:2.2 1 0; }
+  #itemsBox .row input.in-price{ flex:.7 1 0; text-align:center; }
+  #itemsBox .row button{
+    width:44px; height:44px; flex:0 0 44px; border-radius:50%;
+    background:var(--glass-bg); color:var(--aubergine);
+    border:1px solid var(--glass-line);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.92), 0 6px 16px rgba(61,42,80,.15);
+    font-size:19px; line-height:1; cursor:pointer;
+    -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+    transition:background .18s ease, transform .18s ease;
+  }
+  #itemsBox .row button:hover{ background:rgba(255,255,255,.82); transform:translateY(-1px); }
+
+  /* ---- print: the sheet must stay flat and print-safe ---- */
+  @media print{
+    .detail-cell .ic{
+      background:#fdf8ec; border-color:var(--line);
+      box-shadow:none; -webkit-backdrop-filter:none; backdrop-filter:none;
+    }
+    .btn,.items .row button{ -webkit-backdrop-filter:none; backdrop-filter:none; }
+  }
 </style>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <div class="wrap">
