@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rova Event — فاتورة</title>
+<style>
+  :root{
+    --aubergine:#3d2a50;
+    --aubergine-2:#4b3564;
+    --gold:#c9a24a;
+    --gold-2:#e6c878;
+    --cream:#f6f1e8;
+    --brown:#4a3b2c;
+    --brown-soft:#6b5a44;
+    --line:#d9cbb4;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    font-family:"SF Arabic","Geeza Pro","Al Bayan","Damascus",Tahoma,sans-serif;
+    background:#ece5d8;
+    color:var(--brown);
+    line-height:1.7;
+  }
+  .wrap{ max-width:1100px; margin:18px auto; padding:0 14px; }
+  .form-pane{
+    background:#fff; border-radius:16px; padding:22px 24px;
+    box-shadow:0 6px 24px rgba(0,0,0,.08); margin-bottom:22px;
+  }
+  .form-pane h2{ color:var(--aubergine); font-size:19px; margin-bottom:4px; }
+  .form-pane .sub{ color:var(--brown-soft); font-size:12.5px; margin-bottom:16px; }
+  .grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px 16px; }
+  .grid.g4{ grid-template-columns:repeat(4,1fr); }
+  @media(max-width:820px){ .grid,.grid.g4{ grid-template-columns:1fr 1fr; } }
+  label{ display:block; font-size:12.5px; color:var(--brown-soft); margin-bottom:4px; font-weight:600; }
+  input,select,textarea{
+    width:100%; border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; font-size:14px; font-family:inherit; background:#fdfbf6; color:var(--brown);
+  }
+  input:focus,select:focus{ outline:2px solid rgba(201,162,74,.35); border-color:var(--gold); }
+  fieldset{ border:none; }
+  .section-title{
+    font-size:15px; color:var(--aubergine); font-weight:700; margin:18px 0 10px;
+    border-bottom:2px solid var(--gold); padding-bottom:6px;
+  }
+  .row{ display:flex; gap:10px; }
+  .row input{ flex:1; }
+  .btn{
+    border:none; border-radius:9px; padding:9px 16px; cursor:pointer;
+    font-family:inherit; font-weight:700; font-size:13.5px;
+  }
+  .btn-gold{ background:linear-gradient(135deg,var(--gold),var(--gold-2)); color:#3a2b16; }
+  .btn-outline{ background:#fff; border:1.5px solid var(--gold); color:var(--aubergine); }
+  .btn-row{ display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+  .tools-hint{ font-size:12px; color:var(--brown-soft); margin-top:10px; }
+  .tools-hint b{ color:var(--aubergine); }
+  .items .row{ margin-bottom:8px; }
+  .items .row input.in-name{ flex:2; } .items .row input.in-detail{ flex:2.2; } .items .row input.in-price{ flex:.7; }
+  .items .row button{ width:34px; border:none; background:#f4e6dc; color:var(--brown); font-size:16px; border-radius:7px; cursor:pointer; }
+  .total-preview{ margin-top:10px; text-align:left; font-size:15px; font-weight:700; color:var(--aubergine); }
+  .total-preview span{ color:var(--gold); font-size:20px; }
+  .radio-row{ display:flex; gap:18px; flex-wrap:wrap; }
+  .radio-row label{ display:flex; align-items:center; gap:6px; font-weight:400; cursor:pointer; }
+  .radio-row input{ width:auto; }
+
+  /* ===== INVOICE SHEET ===== */
+  .sheet{
+    width:210mm; min-height:297mm; margin:0 auto; background:#fff;
+    position:relative; overflow:hidden;
+  }
+  .sheet-inner{ padding:10mm 12mm 12mm; position:relative; z-index:2; }
+  /* botanical corner leaves */
+  .leaf{ position:absolute; z-index:1; opacity:.5; pointer-events:none; }
+  .leaf.tl{ top:-6mm; left:-6mm; transform:rotate(180deg); }
+  .leaf.br{ bottom:-6mm; right:-6mm; }
+  .leaf .l1{ fill:none; stroke:var(--gold); stroke-width:1.6; }
+  .leaf .l2{ fill:none; stroke:#9c8a5e; stroke-width:1.1; }
+  .leaf .l3{ fill:none; stroke:var(--gold); stroke-width:.9; }
+
+  /* header */
+  .head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:5mm; }
+  .brand{ display:flex; align-items:center; gap:4mm; }
+  .logo{
+    background:linear-gradient(135deg,var(--aubergine),var(--aubergine-2));
+    border-radius:5mm; padding:2mm 4.5mm; text-align:center;
+    box-shadow:0 2px 10px rgba(61,42,80,.35);
+  }
+  .logo .r1{ font-family:Georgia,"Baskerville","Didot",serif; color:var(--gold-2); font-size:22pt; font-weight:700; line-height:1; letter-spacing:.5px; }
+  .logo .r2{ font-family:Georgia,"Baskerville",serif; color:var(--gold); font-size:6.5pt; font-weight:400; letter-spacing:3px; text-transform:uppercase; }
+  .brand .tag{ font-size:9pt; color:var(--brown-soft); font-weight:600; }
+  .head-right{ text-align:center; }
+  .head-right .inv-ar{ font-family:Georgia,"Baskerville",serif; color:var(--aubergine); font-size:26pt; font-weight:700; line-height:1.05; }
+  .head-right .inv-en{ font-size:8pt; letter-spacing:4px; text-transform:uppercase; color:var(--gold); font-weight:700; }
+
+  .meta-row{ display:flex; gap:5mm; margin-bottom:4mm; flex-wrap:wrap; }
+  .meta-box{ border:1px solid var(--line); border-radius:3mm; padding:2.4mm 3.5mm; flex:1; min-width:40mm; }
+  .meta-box .k{ font-size:7.5pt; color:var(--brown-soft); font-weight:700; letter-spacing:.5px; }
+  .meta-box .v{ font-size:13pt; color:var(--aubergine); font-weight:700; margin-top:1mm; }
+  .meta-box .v.small{ font-size:10.5pt; font-weight:600; }
+
+  .sec-label{ font-size:10pt; color:var(--aubergine); font-weight:800; margin:4mm 0 1.5mm; }
+  .sec-label::after{ content:""; display:block; height:1px; background:linear-gradient(to left,var(--gold) 30%,transparent); margin-top:1mm; }
+
+  .client-lines{ display:grid; grid-template-columns:1fr 1fr; gap:2mm 8mm; margin-top:1mm; }
+  .client-lines .cl{ font-size:8.5pt; color:var(--brown-soft); }
+  .client-lines .cl b{ display:block; color:var(--brown); }
+  .client-lines .cl .vals{ border-bottom:1px dotted #b7a886; color:var(--brown); min-height:5mm; padding:0 2px; }
+
+  .details-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:2mm; margin-top:2mm; }
+  .detail-cell{ text-align:center; border:1px solid var(--line); border-radius:3mm; padding:1.8mm 1mm; background:#fbf8f0; }
+  .detail-cell .ic{ display:block; color:var(--gold); font-size:13pt; margin-bottom:.6mm; }
+  .detail-cell .ik{ font-size:7pt; color:var(--brown-soft); font-weight:700; }
+  .detail-cell .iv{ font-size:10.5pt; color:var(--aubergine); font-weight:700; margin-top:.6mm; }
+
+  table.items-tbl{ width:100%; border-collapse:collapse; margin-top:2mm; }
+  .items-tbl th{ background:linear-gradient(135deg,var(--aubergine),var(--aubergine-2)); color:#fff; }
+  .items-tbl th,.items-tbl td{ border:1px solid var(--line); padding:1.7mm 2.4mm; text-align:center; font-size:8.5pt; }
+  .items-tbl tbody tr:nth-child(even){ background:#faf6ec; }
+  .items-tbl .num{ width:6%; } .items-tbl .svc{ width:20%; } .items-tbl .dtl{ width:46%; text-align:right; }
+  .items-tbl .prc{ width:14%; } 
+  .items-tbl tbody tr.total-row td{ background:#efe6d3; font-weight:800; color:var(--aubergine); font-size:11pt; }
+  .items-tbl .cur{ color:var(--gold); font-weight:800; }
+
+  .pay-row{ display:flex; gap:8mm; margin-top:3mm; align-items:center; }
+  .pay-opts{ display:flex; gap:3mm; font-size:8.5pt; }
+  .pay-opts .opt{ display:flex; align-items:center; gap:1.2mm; }
+  .pay-opts .box{ width:3.2mm; height:3.2mm; border:1.4px solid var(--brown-soft); border-radius:1mm; display:inline-block; }
+  .pay-opts .box.on{ background:var(--gold); border-color:var(--gold); }
+
+  .foot-area{ display:grid; grid-template-columns:1.25fr 1fr; gap:6mm; margin-top:4mm; }
+  .notes-box,.payinfo-box{ border:1px solid var(--line); border-radius:3mm; padding:2.2mm 3mm; background:#fbf8f0; }
+  .notes-box .lb,.payinfo-box .lb{ font-size:8.5pt; color:var(--aubergine); font-weight:800; margin-bottom:1.6mm; }
+  .notes-box ul{ padding-right:5mm; font-size:8.6pt; color:var(--brown-soft); }
+  .notes-box li{ margin-bottom:.8mm; }
+  .payinfo-box .p{ font-size:8.6pt; color:var(--brown); margin-bottom:1mm; }
+  .payinfo-box .p b{ color:var(--aubergine); }
+
+  .closing{ text-align:center; margin-top:2.5mm; }
+  .closing .c1{ color:var(--aubergine); font-size:11.5pt; font-weight:800; }
+  .closing .c2{ color:var(--brown-soft); font-size:8.5pt; margin-top:.6mm; }
+  .closing .goldline{ width:34mm; height:1.6px; background:linear-gradient(to left,transparent,var(--gold),transparent); margin:2mm auto 0; }
+
+  .footer-note{ text-align:center; font-size:7pt; color:#b3a689; margin-top:5mm; letter-spacing:.5px; }
+
+  /* hide form in print */
+  @media print{
+    body{ background:#fff; }
+    .form-pane{ display:none !important; }
+    .wrap{ max-width:none; margin:0; padding:0; }
+    .sheet{ width:auto; min-height:296mm; margin:0; box-shadow:none; }
+    .leaf{ transform:none !important; width:110px; height:110px; opacity:.35; }
+    .leaf.tl{ top:0; left:0; }
+    .leaf.br{ bottom:0; right:0; }
+    @page{ size:A4; margin:0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="form-pane">
+    <h2>منشئ فواتير Rova Event</h2>
+    <div class="sub">عبّئ البيانات ثم اضغط «عرض الفاتورة» و«طباعة / حفظ PDF». تُحفظ بياناتك محليًا على هذا الجهاز وتتقدم أرقام الفواتير تلقائيًا.</div>
+
+    <div class="section-title">بيانات الفاتورة والعملاء</div>
+    <div class="grid g4">
+      <div><label>رقم الفاتورة</label><input id="f_invno" value="RV-0001"></div>
+      <div><label>تاريخ الإصدار</label><input id="f_date" value="2026/10/05"></div>
+      <div><label>اسم العميلة</label><input id="f_cname" placeholder="اسم العميلة"></div>
+      <div><label>رقم الجوال</label><input id="f_cmobile" placeholder="05xxxxxxxx"></div>
+    </div>
+    <div class="grid">
+      <div><label>الباقة المختارة</label><input id="f_pkg" value="Rova Plus"></div>
+      <div><label>تفاصيل الخدمة / ملاحظة العميل</label><input id="f_pkgdetail" placeholder="اختياري"></div>
+    </div>
+
+    <div class="section-title">بيانات المناسبة</div>
+    <div class="grid g4">
+      <div><label>موقع المناسبة</label><input id="f_loc" placeholder="مثال: جدة"></div>
+      <div><label>تاريخ المناسبة</label><input id="f_edate" placeholder="2026/10/08"></div>
+      <div><label>الباقة المختارة (تظهر في مربع التفاصيل)</label><input id="f_pkg2" placeholder="Rova Plus"></div>
+    </div>
+    <div class="grid g4">
+      <div><label>عدد المشرفات</label><input id="f_sup" value="مشرفة واحدة"></div>
+      <div><label>عدد الضيوف</label><input id="f_guest" value="200"></div>
+    </div>
+
+    <div class="section-title">بنود الفاتورة (الخدمات)</div>
+    <div id="itemsBox"></div>
+    <div class="btn-row">
+      <button class="btn btn-outline" onclick="addItem()">+ إضافة بند</button>
+    </div>
+    <div class="total-preview">الإجمالي المستحق: <span id="totPreview">0</span> ر.س</div>
+
+    <div class="section-title">حالة الدفع والملاحظات ومعلومات الدفع</div>
+    <div class="grid g4">
+      <div>
+        <label>حالة الدفع</label>
+        <div class="radio-row">
+          <label><input type="radio" name="pay" value="مدفوعة بالكامل"> مدفوعة بالكامل</label>
+          <label><input type="radio" name="pay" value="مدفوعة جزئياً"> مدفوعة جزئياً</label>
+          <label><input type="radio" name="pay" value="غير مدفوعة" checked> غير مدفوعة</label>
+        </div>
+      </div>
+      <div><label>البنك</label><input id="f_bank" value="مصرف الراجحي"></div>
+      <div><label>IBAN</label><input id="f_iban" value="SA00 0000 0000 0000 0000 0000"></div>
+    </div>
+    <div class="grid g4">
+      <div><label>رقم الجوال (التواصل)</label><input id="f_phone" value="+966 570 330 877"></div>
+      <div><label>انستقرام</label><input id="f_insta" value="@rova.event"></div>
+      <div><label>ملاحظات الفاتورة (تظهر أسفل الفاتورة)</label><textarea id="f_notes" rows="2"></textarea></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-gold" onclick="renderInvoice()">عرض الفاتورة</button>
+      <button class="btn btn-gold" onclick="window.print()">طباعة / حفظ PDF</button>
+      <button class="btn btn-outline" onclick="saveForm()">حفظ بيانات هذه الفاتورة</button>
+    </div>
+    <div class="tools-hint"><b>للطباعة:</b> اضغط «طباعة / حفظ PDF» واختر «حفظ بصيغة PDF». بيانات النموذج تُحفظ تلقائيًا على هذا الجهاز، ورقم الفاتورة يتقدم تلقائيًا بعد كل عملية حفظ.</div>
+  </div>
+
+  <div class="sheet" id="sheetAr"><!-- botanical corner leaves -->
+    <svg class="leaf tl" width="150" height="150" viewBox="0 0 150 150">
+      <path class="l1" d="M80,140 C20,120 15,50 80,20 C50,40 40,80 80,140Z"/>
+      <path class="l2" d="M88,140 C30,115 22,60 88,28 C60,50 55,95 88,140Z"/>
+      <path class="l3" d="M138,150 C120,90 130,30 150,8 C140,50 148,100 138,150Z"/>
+    </svg>
+    <svg class="leaf br" width="150" height="150" viewBox="0 0 150 150">
+      <path class="l1" d="M80,140 C20,120 15,50 80,20 C50,40 40,80 80,140Z"/>
+      <path class="l2" d="M88,140 C30,115 22,60 88,28 C60,50 55,95 88,140Z"/>
+      <path class="l3" d="M138,150 C120,90 130,30 150,8 C140,50 148,100 138,150Z"/>
+    </svg>
+
+    <div class="sheet-inner">
+
+      <!-- header -->
+      <div class="head">
+        <div class="brand">
+          <div class="logo">
+            <div class="r1" id="logoName">Rova</div>
+            <div class="r2">EVENT</div>
+          </div>
+          <div class="tag">دعوات إلكترونية وإدارة حضور<br>Electronic Invitations &amp; Attendance</div>
+        </div>
+        <div class="head-right">
+          <div class="inv-ar">فاتورة</div>
+          <div class="inv-en">INVOICE</div>
+        </div>
+      </div>
+
+      <!-- invoice details -->
+      <div class="meta-row">
+        <div class="meta-box">
+          <div class="k">رقم الفاتورة / INVOICE No.</div>
+          <div class="v" id="v_invno">RV-0001</div>
+        </div>
+        <div class="meta-box">
+          <div class="k">تاريخ الإصدار / ISSUE DATE</div>
+          <div class="v small" id="v_date">2026/10/05</div>
+        </div>
+      </div>
+
+      <!-- client data -->
+      <div class="sec-label">بيانات العميلة / CLIENT DATA</div>
+      <div class="client-lines">
+        <div class="cl"><b>اسم العميلة</b><span class="vals" id="v_cname">................................</span></div>
+        <div class="cl"><b>رقم الجوال</b><span class="vals" id="v_cmobile">................................</span></div>
+      </div>
+
+      <!-- event details -->
+      <div class="sec-label">تفاصيل المناسبة / EVENT DETAILS</div>
+      <div class="details-row">
+        <div class="detail-cell"><span class="ic">📍</span><span class="ik">موقع المناسبة</span><span class="iv" id="v_loc">—</span></div>
+        <div class="detail-cell"><span class="ic">📅</span><span class="ik">تاريخ المناسبة</span><span class="iv" id="v_edate">—</span></div>
+        <div class="detail-cell"><span class="ic">🧍</span><span class="ik">عدد المشرفات</span><span class="iv" id="v_sup">—</span></div>
+        <div class="detail-cell"><span class="ic">👥</span><span class="ik">عدد الضيوف</span><span class="iv" id="v_guest">—</span></div>
+        <div class="detail-cell"><span class="ic">📦</span><span class="ik">الباقة المختارة</span><span class="iv" id="v_pkg">—</span></div>
+      </div>
+
+      <!-- services table -->
+      <div class="sec-label">تفاصيل الخدمة / SERVICE DETAILS</div>
+      <table class="items-tbl">
+        <thead>
+          <tr><th class="num">م</th><th class="svc">الخدمة</th><th class="dtl">التفاصيل</th><th class="prc">السعر (ر.س)</th></tr>
+        </thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+
+      <!-- total + payment status -->
+      <div class="pay-row">
+        <div class="meta-box" style="flex:1.4;">
+          <div class="k">الإجمالي المستحق / TOTAL</div>
+          <div class="v" style="font-size:17pt;" id="v_total">0 <span style="font-size:10pt;">ر.س</span></div>
+        </div>
+        <div class="pay-opts">
+          <span class="opt"><span class="box" data-pay="0"></span> مدفوعة بالكامل</span>
+          <span class="opt"><span class="box" data-pay="1"></span> مدفوعة جزئياً</span>
+          <span class="opt"><span class="box" data-pay="2"></span> غير مدفوعة</span>
+        </div>
+      </div>
+
+      <!-- footnote -->
+      <div class="foot-area">
+        <div class="notes-box">
+          <div class="lb">ملاحظات / NOTES</div>
+          <ul id="v_notes"></ul>
+        </div>
+        <div class="payinfo-box">
+          <div class="lb">معلومات الدفع / PAYMENT INFO</div>
+          <div class="p"><b>البنك:</b> <span id="v_bank">مصرف الراجحي</span></div>
+          <div class="p"><b>IBAN:</b> <span id="v_iban">SA00 0000 0000 0000 0000 0000</span></div>
+          <div class="p" style="margin-top:2mm;border-top:1px solid var(--line);padding-top:2mm;"><b>الجوال:</b> <span id="v_phone">+966 570 330 877</span></div>
+          <div class="p"><b>انستقرام:</b> <span id="v_insta">@rova.event</span></div>
+        </div>
+      </div>
+
+      <div class="closing">
+        <div class="c1">شكراً لثقتكم بـ Rova Event</div>
+        <div class="c2">نصنع تجربة دعوة تليق بمناسبتكم</div>
+        <div class="goldline"></div>
+      </div>
+
+    </div></div>
+
+</div>
+
+<script>
+(function(){
+  var DEFAULT_ITEMS = [
+    { name: 'الباقة الأساسية', detail: 'Rova Plus', price: '496' },
+    { name: 'عدد الضيوف', detail: '200 ضيف', price: '' },
+    { name: 'عدد المشرفات', detail: 'مشرفة واحدة', price: '' },
+    { name: 'رسالة تذكير', detail: 'مشمولة مع الباقة', price: '' },
+    { name: 'رسالة شكر', detail: 'بعد المناسبة', price: '' },
+    { name: 'خدمات إضافية', detail: '', price: '' }
+  ];
+  var items = [];
+  var $ = function(id){ return document.getElementById(id); };
+
+  function itemPrice(it){
+    var n = parseFloat(('' + it.price).replace(/[^0-9.\-]/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+  function liveTotal(){
+    var t = 0;
+    items.forEach(function(it){ t += itemPrice(it); });
+    return t;
+  }
+  function escStr(s){ return (s == null) ? '' : '' + s; }
+
+  function renderFormRows(){
+    var box = $('itemsBox');
+    box.innerHTML = '';
+    items.forEach(function(it, i){
+      var r = document.createElement('div'); r.className = 'row';
+      var ni = document.createElement('input');
+      ni.className = 'in-name'; ni.dataset.k = 'name'; ni.placeholder = 'الخدمة';
+      ni.value = String(it.name == null ? '' : it.name);
+      var di = document.createElement('input');
+      di.className = 'in-detail'; di.dataset.k = 'detail'; di.placeholder = 'التفاصيل';
+      di.value = String(it.detail == null ? '' : it.detail);
+      var pi = document.createElement('input');
+      pi.className = 'in-price'; pi.dataset.k = 'price'; pi.placeholder = 'السعر'; pi.inputMode = 'decimal';
+      pi.value = String(it.price == null ? '' : it.price);
+      var del = document.createElement('button');
+      del.type = 'button'; del.title = 'حذف'; del.textContent = '×';
+      del.onclick = (function(idx){
+        return function(){ items.splice(idx, 1); renderFormRows(); updateTotal(); };
+      })(i);
+      [ni, di, pi].forEach(function(inp){
+        var k = inp.dataset.k;
+        inp.oninput = (function(idx){
+          return function(){ items[idx][k] = inp.value; updateTotal(); };
+        })(i);
+      });
+      r.appendChild(ni); r.appendChild(di); r.appendChild(pi); r.appendChild(del);
+      box.appendChild(r);
+    });
+  }
+
+  function setTxt(id, val, dash){
+    var el = $(id);
+    if (!el) return;
+    var v = esArray(val);
+    el.textContent = (v === '' ? (dash ? '—' : '...............................') : v);
+  }
+  function esArray(x){ return x == null ? '' : '' + x; }
+
+  function renderInvoice(){
+    setTxt('v_invno', $('f_invno').value);
+    setTxt('v_date', $('f_date').value);
+    setTxt('v_cname', $('f_cname').value);
+    setTxt('v_cmobile', $('f_cmobile').value);
+    setTxt('v_loc', $('f_loc').value, true);
+    setTxt('v_edate', $('f_edate').value, true);
+    setTxt('v_sup', $('f_sup').value, true);
+    setTxt('v_guest', $('f_guest').value, true);
+    setTxt('v_pkg', $('f_pkg').value, true);
+    setTxt('v_bank', $('f_bank').value);
+    setTxt('v_iban', $('f_iban').value);
+    setTxt('v_phone', $('f_phone').value);
+    setTxt('v_insta', $('f_insta').value);
+
+    var tb = $('itemsBody');
+    tb.innerHTML = '';
+    var tot = 0;
+    items.forEach(function(it, idx){
+      var tr = document.createElement('tr');
+      var num = itemPrice(it);
+      var price = ('' + it.price).trim();
+      var prcTxt = (price === '' || num <= 0) ? '—' : (num + ' ');
+      if (num > 0) tot += num;
+      tr.innerHTML = '<td class="num">' + (idx + 1) + '</td>'
+        + '<td class="svc">' + escStr(it.name) + '</td>'
+        + '<td class="dtl">' + escStr(it.detail) + '</td>'
+        + '<td class="prc">' + escStr(prcTxt) + '</td>';
+      tb.appendChild(tr);
+    });
+    var trt = document.createElement('tr'); trt.className = 'total-row';
+    trt.innerHTML = '<td colspan="3" style="text-align:left;">الإجمالي المستحق</td>'
+      + '<td class="prc"><span class="cur">' + tot + '</span> ر.س</td>';
+    tb.appendChild(trt);
+    $('v_total').innerHTML = '<span style="font-size:17pt;">' + tot + '</span> <span style="font-size:10pt;">ر.س</span>';
+
+    var pay = document.querySelector('input[name="pay"]:checked');
+    document.querySelectorAll('.pay-opts .box').forEach(function(b){ b.classList.remove('on'); });
+    var map = { 'مدفوعة بالكامل': '0', 'مدفوعة جزئياً': '1', 'غير مدفوعة': '2' };
+    var key = (pay && map[pay.value]) ? map[pay.value] : '2';
+    document.querySelectorAll('.pay-opts .box').forEach(function(b){
+      if (b.dataset.pay === key) b.classList.add('on');
+    });
+
+    var notesBox = $('v_notes');
+    notesBox.innerHTML = '';
+    var n = ('' + esArray($('f_notes').value)).trim();
+    if (n){ var li = document.createElement('li'); li.textContent = n; notesBox.appendChild(li); }
+  }
+
+  function updateTotal(){
+    var tp = $('totPreview');
+    tp.textContent = liveTotal();
+  }
+  function addItem(){
+    items.push({ name: '', detail: '', price: '' });
+    renderFormRows(); updateTotal();
+  }
+
+  function saveForm(){
+    var data = { fields: {}, items: items };
+    ['f_invno', 'f_date', 'f_cname', 'f_cmobile', 'f_pkg', 'f_loc', 'f_edate', 'f_sup', 'f_guest', 'f_bank', 'f_iban', 'f_phone', 'f_insta', 'f_notes'].forEach(function(id){
+      data.fields[id] = $(id).value;
+    });
+    var p = document.querySelector('input[name="pay"]:checked');
+    data.pay = p ? p.value : 'غير مدفوعة';
+    localStorage.setItem('rova_invoice_data', JSON.stringify(data));
+
+    var mm = ($('f_invno').value.match(/\d+/)) || [0];
+    var curNumber = parseInt(mm[0], 10);
+    var next = (isNaN(curNumber) ? 0 : curNumber) + 1;
+    $('f_invno').value = 'RV-' + String(next).padStart(4, '0');
+    renderInvoice();
+    alert('تم حفظ بيانات الفاتورة وتم تجهيز رقم الفاتورة التالي: ' + $('f_invno').value);
+  }
+
+  function loadSaved(){
+    try{
+      var raw = localStorage.getItem('rova_invoice_data');
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      if (data.items) items = data.items;
+      if (data.fields) Object.keys(data.fields).forEach(function(id){
+        var el = $(id);
+        if (el && data.fields[id] != null) el.value = data.fields[id];
+      });
+      if (data.pay){
+        var pb = document.querySelector('input[name="pay"][value="' + data.pay + '"]');
+        if (pb) pb.checked = true;
+      }
+    }catch(e){}
+  }
+
+  function init(){
+    items = [];
+    DEFAULT_ITEMS.forEach(function(o){ items.push({ name: o.name, detail: o.detail, price: o.price }); });
+    loadSaved();
+    renderFormRows();
+    updateTotal();
+    renderInvoice();
+  }
+  init();
+
+  window.renderInvoice = renderInvoice;
+  window.addItem = addItem;
+  window.saveForm = saveForm;
+})();
+</script>
+</body>
+</html>
