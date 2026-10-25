@@ -71,8 +71,10 @@
   .sheet-inner{ padding:10mm 12mm 12mm; position:relative; z-index:2; }
   /* botanical corner leaves */
   .leaf{ position:absolute; z-index:1; opacity:.5; pointer-events:none; }
-  .leaf.tl{ top:-6mm; left:-6mm; transform:rotate(180deg); }
-  .leaf.br{ bottom:-6mm; right:-6mm; }
+  /* corner ornaments stay fully INSIDE the trim edge — a bleeding leaf reads
+     as a clipped element on a printed invoice */
+  .leaf.tl{ top:3.5mm; left:3.5mm; transform:rotate(180deg); }
+  .leaf.br{ bottom:3.5mm; right:3.5mm; }
   .leaf .l1{ fill:none; stroke:var(--gold); stroke-width:1.6; }
   .leaf .l2{ fill:none; stroke:#9c8a5e; stroke-width:1.1; }
   .leaf .l3{ fill:none; stroke:var(--gold); stroke-width:.9; }
@@ -272,6 +274,102 @@
     }
     .btn,.items .row button{ -webkit-backdrop-filter:none; backdrop-filter:none; }
   }
+
+  /* =====================================================================
+     v2 · PRINT-FIRST / ONE-PAGE LAYER
+     Contract: the sheet is a FIXED A4 box (210x297mm, overflow hidden) so
+     it can never spill to a second page; a measured autofit scales the
+     inner block down when the content is taller, and print keeps colours.
+     ===================================================================== */
+  .sheet{
+    width:210mm; height:297mm; min-height:0; overflow:hidden;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .sheet-inner{ transform-origin:top center; }
+  .sheet *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+  /* brand accent bar (top edge) */
+  .sheet::before{
+    content:""; position:absolute; top:0; right:0; left:0; height:3.5mm; z-index:3;
+    background:linear-gradient(to left,var(--aubergine) 0%,var(--aubergine) 52%,var(--gold) 100%);
+  }
+  /* tighter vertical rhythm — designed to land on one page without scaling */
+  .head{ margin-bottom:3.4mm; align-items:center; padding-top:2.5mm; }
+  .meta-row{ gap:4mm; margin-bottom:2.8mm; }
+  .meta-box{ border-radius:2.4mm; padding:2mm 3mm; }
+  .sec-label{ margin:3mm 0 1.2mm; font-size:9.5pt; }
+  .client-lines{ gap:1.6mm 8mm; }
+  .details-row{ gap:1.6mm; margin-top:1.4mm; }
+  .detail-cell{ padding:1.9mm 1mm; border-radius:2.4mm; }
+  .detail-cell .ic{
+    width:7mm; height:7mm; margin-bottom:1mm; border-radius:2mm;
+    background:#fdf8ec; border:1px solid rgba(201,162,74,.42);
+    box-shadow:none; color:var(--gold);
+  }
+  .detail-cell .ic svg{ width:4.2mm; height:4.2mm; display:block; }
+  .items-tbl{ margin-top:1.4mm; }
+  .items-tbl th,.items-tbl td{ padding:1.5mm 2.2mm; }
+  .items-tbl td{ font-variant-numeric:tabular-nums; }
+  .items-tbl tbody tr.total-row td{ font-size:10.5pt; }
+  /* alignment consistency: the amounts in the price column share one axis,
+     and both client dotted rules sit on the same baseline */
+  .items-tbl tbody tr.total-row td.prc{ text-align:center; }
+  /* Arabic+digits in one cell reorder under bidi and shift the visual centre:
+     a single LTR direction on the numeric cells keeps every amount on one axis */
+  .items-tbl td.prc{ direction:ltr; text-align:center; unicode-bidi:isolate; }
+  .client-lines .cl .vals{ display:block; height:5mm; line-height:5mm; }
+  .notes-box li.muted{ color:#b3a689; }
+  .pay-row{ margin-top:2.4mm; gap:5mm; align-items:stretch; }
+  .foot-area{ margin-top:2.8mm; }
+  .closing{ margin-top:1.8mm; }
+  .closing .c1{ font-size:11pt; }
+  .closing .c2{ font-size:8pt; }
+  .closing .goldline{ margin-top:1.6mm; }
+
+  /* payment status → one unambiguous pill (no empty checkbox glyphs in print) */
+  .pay-status{ flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .pay-status .k{ font-size:7.5pt; color:var(--brown-soft); font-weight:800; margin-bottom:1.4mm; }
+  .pay-pill{
+    display:inline-flex; align-items:center; gap:1.6mm;
+    font-size:9.5pt; font-weight:800; padding:1.6mm 4mm;
+    border-radius:999px; border:1.4px solid var(--line); width:fit-content;
+    background:#fbf8f0; color:var(--brown-soft);
+  }
+  .pay-pill .dot{ width:2.6mm; height:2.6mm; border-radius:50%; background:#c9bfa8; }
+  .pay-pill[data-state="paid"]{ color:#1f6b45; border-color:rgba(31,107,69,.45); background:#eef7f1; }
+  .pay-pill[data-state="paid"] .dot{ background:#2e9e68; }
+  .pay-pill[data-state="partial"]{ color:#8a5a12; border-color:rgba(201,162,74,.55); background:#fdf6e6; }
+  .pay-pill[data-state="partial"] .dot{ background:var(--gold); }
+  .pay-pill[data-state="unpaid"]{ color:#8a2b2b; border-color:rgba(138,43,43,.40); background:#fdf0f0; }
+  .pay-pill[data-state="unpaid"] .dot{ background:#c04a4a; }
+
+  /* total card — the one number the eye must find first */
+  .total-card{
+    flex:1.4; border:1.4px solid rgba(201,162,74,.5); border-radius:2.6mm;
+    padding:1.8mm 3.2mm; background:linear-gradient(150deg,#fdf9f0,#f6efdd);
+  }
+  .total-card .k{ font-size:7.5pt; color:var(--brown-soft); font-weight:800; }
+  .total-card .amt{
+    font-size:18pt; font-weight:900; color:var(--aubergine); line-height:1.2;
+    font-variant-numeric:tabular-nums;
+  }
+  .total-card .amt small{ font-size:10pt; font-weight:700; color:var(--gold); }
+
+  /* ---- print: exactly one page, no chrome, colours preserved ---- */
+  @media print{
+    html,body{ width:210mm; background:#fff; }
+    .form-pane{ display:none !important; }
+    .wrap{ max-width:none; margin:0; padding:0; }
+    .sheet{
+      width:210mm; height:297mm; margin:0; box-shadow:none; border-radius:0;
+      break-inside:avoid; page-break-inside:avoid;
+    }
+    .sheet-inner{ padding-top:11mm; }
+    .leaf{ width:104px; height:104px; opacity:.26; }
+    .leaf.tl{ top:4mm; left:4mm; }
+    .leaf.br{ bottom:4mm; right:4mm; }
+    @page{ size:A4; margin:0; }
+  }
 </style>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -333,7 +431,7 @@
 
     <div class="btn-row">
       <button class="btn btn-gold" onclick="renderInvoice()">عرض الفاتورة</button>
-      <button class="btn btn-gold" onclick="window.print()">طباعة / حفظ PDF</button>
+      <button class="btn btn-gold" onclick="fitSheet();window.print()">طباعة / حفظ PDF (صفحة واحدة)</button>
       <button class="btn btn-outline" onclick="saveForm()">حفظ بيانات هذه الفاتورة</button>
     </div>
     <div class="tools-hint"><b>للطباعة:</b> اضغط «طباعة / حفظ PDF» واختر «حفظ بصيغة PDF». بيانات النموذج تُحفظ تلقائيًا على هذا الجهاز، ورقم الفاتورة يتقدم تلقائيًا بعد كل عملية حفظ.</div>
@@ -390,11 +488,11 @@
       <!-- event details -->
       <div class="sec-label">تفاصيل المناسبة / EVENT DETAILS</div>
       <div class="details-row">
-        <div class="detail-cell"><span class="ic">📍</span><span class="ik">موقع المناسبة</span><span class="iv" id="v_loc">—</span></div>
-        <div class="detail-cell"><span class="ic">📅</span><span class="ik">تاريخ المناسبة</span><span class="iv" id="v_edate">—</span></div>
-        <div class="detail-cell"><span class="ic">🧍</span><span class="ik">عدد المشرفات</span><span class="iv" id="v_sup">—</span></div>
-        <div class="detail-cell"><span class="ic">👥</span><span class="ik">عدد الضيوف</span><span class="iv" id="v_guest">—</span></div>
-        <div class="detail-cell"><span class="ic">📦</span><span class="ik">الباقة المختارة</span><span class="iv" id="v_pkg">—</span></div>
+        <div class="detail-cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.5s7-5.9 7-11.2A7 7 0 0 0 5 10.3c0 5.3 7 11.2 7 11.2z"/><circle cx="12" cy="10.2" r="2.6"/></svg></span><span class="ik">موقع المناسبة</span><span class="iv" id="v_loc">—</span></div>
+        <div class="detail-cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10.5h18"/></svg></span><span class="ik">تاريخ المناسبة</span><span class="iv" id="v_edate">—</span></div>
+        <div class="detail-cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5 20.5c0-3.6 3.2-5.6 7-5.6s7 2 7 5.6"/></svg></span><span class="ik">عدد المشرفات</span><span class="iv" id="v_sup">—</span></div>
+        <div class="detail-cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.1"/><path d="M2.5 20.5c0-3.2 3-5.1 6.5-5.1s6.5 1.9 6.5 5.1"/><path d="M17.2 5.6a3 3 0 0 1 0 5.5M19.8 20.5c0-2.5-.9-4.2-2.7-5"/></svg></span><span class="ik">عدد الضيوف</span><span class="iv" id="v_guest">—</span></div>
+        <div class="detail-cell"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.2v9.6L12 21l-8-4.2V7.2z"/><path d="M4 7.2l8 4.3 8-4.3M12 11.5V21"/></svg></span><span class="ik">الباقة المختارة</span><span class="iv" id="v_pkg">—</span></div>
       </div>
 
       <!-- services table -->
@@ -408,14 +506,13 @@
 
       <!-- total + payment status -->
       <div class="pay-row">
-        <div class="meta-box" style="flex:1.4;">
-          <div class="k">الإجمالي المستحق / TOTAL</div>
-          <div class="v" style="font-size:17pt;" id="v_total">0 <span style="font-size:10pt;">ر.س</span></div>
+        <div class="total-card">
+          <div class="k">الإجمالي المستحق / TOTAL DUE</div>
+          <div class="amt" id="v_total">0 <small>ر.س</small></div>
         </div>
-        <div class="pay-opts">
-          <span class="opt"><span class="box" data-pay="0"></span> مدفوعة بالكامل</span>
-          <span class="opt"><span class="box" data-pay="1"></span> مدفوعة جزئياً</span>
-          <span class="opt"><span class="box" data-pay="2"></span> غير مدفوعة</span>
+        <div class="pay-status">
+          <div class="k">حالة الدفع / PAYMENT STATUS</div>
+          <span class="pay-pill" id="payPill" data-state="unpaid"><span class="dot"></span><span id="payPillText">غير مدفوعة</span></span>
         </div>
       </div>
 
@@ -527,33 +624,56 @@
     items.forEach(function(it, idx){
       var tr = document.createElement('tr');
       var num = itemPrice(it);
-      var price = ('' + it.price).trim();
-      var prcTxt = (price === '' || num <= 0) ? '—' : (num + ' ');
       if (num > 0) tot += num;
+      /* every amount cell holds ONE bare number in the same wrapper: adding
+         the currency here (as the total row used to) is what broke the axis */
+      var prcCell = (num > 0) ? '<span class="cur">' + num + '</span>' : '—';
       tr.innerHTML = '<td class="num">' + (idx + 1) + '</td>'
         + '<td class="svc">' + escStr(it.name) + '</td>'
         + '<td class="dtl">' + escStr(it.detail) + '</td>'
-        + '<td class="prc">' + escStr(prcTxt) + '</td>';
+        + '<td class="prc">' + prcCell + '</td>';
       tb.appendChild(tr);
     });
     var trt = document.createElement('tr'); trt.className = 'total-row';
-    trt.innerHTML = '<td colspan="3" style="text-align:left;">الإجمالي المستحق</td>'
-      + '<td class="prc"><span class="cur">' + tot + '</span> ر.س</td>';
+    trt.innerHTML = '<td colspan="3" style="text-align:right;padding-right:6mm;">الإجمالي المستحق</td>'
+      + '<td class="prc"><span class="cur">' + tot + '</span></td>';
     tb.appendChild(trt);
-    $('v_total').innerHTML = '<span style="font-size:17pt;">' + tot + '</span> <span style="font-size:10pt;">ر.س</span>';
+    $('v_total').innerHTML = escStr(tot) + ' <small>ر.س</small>';
 
     var pay = document.querySelector('input[name="pay"]:checked');
-    document.querySelectorAll('.pay-opts .box').forEach(function(b){ b.classList.remove('on'); });
-    var map = { 'مدفوعة بالكامل': '0', 'مدفوعة جزئياً': '1', 'غير مدفوعة': '2' };
-    var key = (pay && map[pay.value]) ? map[pay.value] : '2';
-    document.querySelectorAll('.pay-opts .box').forEach(function(b){
-      if (b.dataset.pay === key) b.classList.add('on');
-    });
+    var map = { 'مدفوعة بالكامل': 'paid', 'مدفوعة جزئياً': 'partial', 'غير مدفوعة': 'unpaid' };
+    var st = (pay && map[pay.value]) ? map[pay.value] : 'unpaid';
+    var pill = $('payPill');
+    if (pill){
+      pill.dataset.state = st;
+      var pt = $('payPillText');
+      if (pt) pt.textContent = (pay ? pay.value : 'غير مدفوعة');
+    }
 
     var notesBox = $('v_notes');
     notesBox.innerHTML = '';
     var n = ('' + esArray($('f_notes').value)).trim();
-    if (n){ var li = document.createElement('li'); li.textContent = n; notesBox.appendChild(li); }
+    var li = document.createElement('li');
+    if (n){ li.textContent = n; }
+    else { li.textContent = 'لا توجد ملاحظات'; li.className = 'muted'; }
+    notesBox.appendChild(li);
+    fitSheet();
+  }
+
+  /* ONE-PAGE GUARANTEE — measure the real content height against the fixed
+     A4 box and scale the inner block down when it overflows, so the printed
+     PDF is always exactly one page (and the on-screen preview matches it). */
+  function fitSheet(){
+    var sheet = $('sheetAr');
+    if (!sheet) return;
+    var inner = sheet.querySelector('.sheet-inner');
+    if (!inner) return;
+    inner.style.transform = 'none';
+    var avail = sheet.clientHeight;
+    var need  = inner.scrollHeight;
+    if (!avail || !need || need <= avail) return;
+    var k = avail / need;
+    inner.style.transform = 'scale(' + (Math.floor(k * 1000) / 1000) + ')';
   }
 
   function updateTotal(){
@@ -612,6 +732,10 @@
   window.renderInvoice = renderInvoice;
   window.addItem = addItem;
   window.saveForm = saveForm;
+  window.fitSheet = fitSheet;
+  window.addEventListener('beforeprint', fitSheet);
+  window.addEventListener('resize', fitSheet);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSheet);
 })();
 </script>
 </body>
